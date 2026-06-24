@@ -292,29 +292,30 @@
       const url = $("importUrl").value.trim();
       if (!url) { showToast("Vul eerst een link in", "error"); return; }
       
-      showToast("Gegevens ophalen...", "info");
+      showToast("Gegevens ophalen via Corsproxy...", "info");
       $("fetchUrlBtn").disabled = true;
 
       try {
-        // Gebruikt allorigins proxy om CORS restricties van de browser te omzeilen
-        const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
+        // Gebruikt corsproxy.io, vaak stabieler dan allorigins
+        const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(url)}`;
         const response = await fetch(proxyUrl);
-        if (!response.ok) throw new Error("Netwerk error");
-        const data = await response.json();
+        if (!response.ok) throw new Error(`Netwerk error: ${response.status}`);
+        const htmlText = await response.text();
         
         const parser = new DOMParser();
-        const doc = parser.parseFromString(data.contents, 'text/html');
-        const bodyText = doc.body.innerText.replace(/\s+/g, ' '); // Strip extra spaces
+        const doc = parser.parseFromString(htmlText, 'text/html');
+        
+        // Gebruik textContent i.p.v. innerText, werkt beter op onzichtbare DOM elementen
+        const bodyText = doc.body ? doc.body.textContent.replace(/\s+/g, ' ') : '';
 
         // 1. Title: Probeer h1 of meta title, filter WGK branding eruit
-        let fetchedTitle = doc.querySelector('h1')?.innerText || doc.title;
+        let fetchedTitle = doc.querySelector('h1')?.textContent || doc.title || '';
         if(fetchedTitle) {
             $("title").value = fetchedTitle.replace(/\| Wit-Gele Kruis/i, '').trim();
         }
 
-        // 2. Datum Regex: robuuster voor voluit geschreven datums (vb. "Dinsdag 10 september 2026" of gewoon "10 september")
+        // 2. Datum Regex: robuuster voor voluit geschreven datums
         const maanden = ['januari', 'februari', 'maart', 'april', 'mei', 'juni', 'juli', 'augustus', 'september', 'oktober', 'november', 'december'];
-        // Houdt rekening met optionele dag van de week en een optioneel jaartal op het einde
         const dateRegex = new RegExp(`(?:maandag|dinsdag|woensdag|donderdag|vrijdag|zaterdag|zondag)?,?\\s*(\\d{1,2})\\s+(${maanden.join('|')})(?:\\s+(\\d{4}))?`, 'i');
         const dateMatch = bodyText.match(dateRegex);
         
@@ -323,21 +324,20 @@
           const maandNr = maanden.indexOf(dateMatch[2].toLowerCase()) + 1;
           let jaar = dateMatch[3];
           
-          // Als het jaartal ontbreekt in de tekst, gokken we op het huidige of volgende jaar
           if (!jaar) {
             const nu = new Date();
             jaar = (maandNr < (nu.getMonth() + 1)) ? nu.getFullYear() + 1 : nu.getFullYear();
           }
           $("date").value = `${jaar}-${String(maandNr).padStart(2, '0')}-${dag}`;
         } else {
-          // Fallback: Probeer "1009" (DDMM) op het einde van de URL uit te pakken
+          // Fallback via URL
           const urlDateMatch = url.match(/-(\d{2})(\d{2})\/?$/);
           if(urlDateMatch) {
             $("date").value = `${new Date().getFullYear()}-${urlDateMatch[2]}-${urlDateMatch[1]}`;
           }
         }
 
-        // 3. Tijd Regex: vb. "14:00 - 16:30", "14.00 u. - 16.30", of "14u00 tot 16u30"
+        // 3. Tijd Regex
         const timeMatch = bodyText.match(/(\d{1,2})[:u\.](\d{2})\s*(?:u\.?)?\s*(?:-|tot|t\/m|–)\s*(\d{1,2})[:u\.](\d{2})/i);
         if (timeMatch) {
           $("start").value = `${timeMatch[1].padStart(2, '0')}:${timeMatch[2]}`;
@@ -352,7 +352,7 @@
         updateApp();
       } catch (err) {
         showToast("Kon pagina niet inladen.", "error");
-        console.error(err);
+        console.error("Scraper Error:", err);
       } finally {
         $("fetchUrlBtn").disabled = false;
       }
