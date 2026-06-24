@@ -257,7 +257,6 @@
       themeBtn.textContent = isDark ? '🌙' : '☀️';
     };
     themeBtn.addEventListener('click', toggleTheme);
-    // Check system preference
     if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) { toggleTheme(); }
 
     function safeFilename(text) { return (text || "event").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "").slice(0, 80) || "event"; }
@@ -315,21 +314,7 @@
       }
     }
 
-    // --- Web Scraper 2.0 Logic ---
-    async function fetchHtmlFallback(url) {
-        // Poging 1: CodeTabs (Vaak meest betrouwbaar voor plain HTML via browser fetch)
-        try {
-            const res = await fetch(`https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`);
-            if (res.ok) return await res.text();
-        } catch (e) { console.log("Codetabs failed, trying fallback..."); }
-        
-        // Poging 2: AllOrigins JSON route
-        const res = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(url)}`);
-        const data = await res.json();
-        if(data.contents) return data.contents;
-        throw new Error("Geen content gevonden.");
-    }
-
+    // --- Web Scraper (Targeted op .side-box) ---
     $("fetchUrlBtn").addEventListener("click", async () => {
       const url = $("importUrl").value.trim();
       if (!url) { showToast("Vul eerst een link in", "error"); return; }
@@ -338,75 +323,50 @@
       $("fetchUrlBtn").disabled = true;
 
       try {
-        const htmlText = await fetchHtmlFallback(url);
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(htmlText, 'text/html');
+        // Gebruik de raw-proxy (meestal sneller dan JSON wrappers)
+        const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`;
+        const response = await fetch(proxyUrl);
+        if (!response.ok) throw new Error("Netwerkfout bij ophalen pagina");
         
-        let foundDate = false;
-
-        // --- Strategie 1: Zoek naar verborgen JSON-LD data (Vaak aanwezig bij events!) ---
-        const scripts = doc.querySelectorAll('script[type="application/ld+json"]');
-        scripts.forEach(script => {
-            try {
-                const schema = JSON.parse(script.innerText || script.textContent);
-                // Als het een array is of genest is, probeer een startDate te vinden via stringify truc
-                const schemaStr = JSON.stringify(schema);
-                if (schemaStr.includes('Event') || schemaStr.includes('startDate')) {
-                    const startMatch = schemaStr.match(/"startDate"\s*:\s*"(\d{4}-\d{2}-\d{2})/i);
-                    if(startMatch) {
-                        $("date").value = startMatch[1];
-                        foundDate = true;
-                    }
-                }
-            } catch(e) {}
-        });
-
-        // Gebruik textContent en vervang witregels/enters door spaties
-        const bodyText = doc.body ? doc.body.textContent.replace(/[\n\r\t]+/g, ' ').replace(/\s+/g, ' ') : '';
-
-        // 1. Title
-        let fetchedTitle = doc.querySelector('h1')?.textContent || doc.title || '';
-        if(fetchedTitle) $("title").value = fetchedTitle.replace(/\| Wit-Gele Kruis/i, '').trim();
-
-        // --- Strategie 2: Zware Regex (als JSON-LD faalt) ---
-        if(!foundDate) {
-            const maanden = ['januari', 'februari', 'maart', 'april', 'mei', 'juni', 'juli', 'augustus', 'september', 'oktober', 'november', 'december'];
-            // Regex zoekt nu met erg veel tolerantie voor extra spaties/leestekens.
-            const dateRegex = new RegExp(`(?:maandag|dinsdag|woensdag|donderdag|vrijdag|zaterdag|zondag)?\\s*,?\\s*(\\d{1,2})\\s*(${maanden.join('|')})\\s*(?:\\s+(\\d{4}))?`, 'i');
-            const dateMatch = bodyText.match(dateRegex);
-            
-            // Controleer ook numerieke datums (DD/MM/YYYY of DD-MM-YYYY)
-            const numDateRegex = /(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/;
-            const numDateMatch = bodyText.match(numDateRegex);
-
-            if (dateMatch) {
-                const dag = dateMatch[1].padStart(2, '0');
-                const maandNr = maanden.indexOf(dateMatch[2].toLowerCase()) + 1;
-                let jaar = dateMatch[3];
-                if (!jaar) {
-                    const nu = new Date();
-                    jaar = (maandNr < (nu.getMonth() + 1)) ? nu.getFullYear() + 1 : nu.getFullYear();
-                }
-                $("date").value = `${jaar}-${String(maandNr).padStart(2, '0')}-${dag}`;
-            } else if (numDateMatch) {
-                 $("date").value = `${numDateMatch[3]}-${numDateMatch[2].padStart(2, '0')}-${numDateMatch[1].padStart(2, '0')}`;
-            } else {
-                // Fallback via URL
-                const urlDateMatch = url.match(/-(\d{2})(\d{2})\/?$/);
-                if(urlDateMatch) $("date").value = `${new Date().getFullYear()}-${urlDateMatch[2]}-${urlDateMatch[1]}`;
-            }
+        const htmlText = await response.text();
+        const doc = new DOMParser().parseFromString(htmlText, 'text/html');
+        
+        // 1. Titel ophalen (uit H1 of title tag)
+        const fetchedTitle = doc.querySelector('h1')?.textContent || doc.title || '';
+        if (fetchedTitle) {
+            $("title").value = fetchedTitle.replace(/\| Wit-Gele Kruis/i, '').trim();
         }
 
-        // 3. Tijd Regex
-        const timeMatch = bodyText.match(/(\d{1,2})[:u\.](\d{2})\s*(?:u\.?)?\s*(?:-|tot|t\/m|–)\s*(\d{1,2})[:u\.](\d{2})/i);
+        // 2. Doelgericht zoeken in de ".side-box" (zoals in je screenshot)
+        // Als .side-box niet bestaat, val terug op .side-content of heel de body.
+        const targetBox = doc.querySelector('.side-box') || doc.querySelector('.side-content') || doc.body;
+        
+        // Verwijder onnodige witregels voor makkelijkere Regex
+        const boxText = targetBox.textContent.replace(/[\n\r\t]+/g, ' ').replace(/\s+/g, ' ');
+
+        // 3. Datum (bvb: 10 september of 10 september 2026)
+        const maanden = ['januari', 'februari', 'maart', 'april', 'mei', 'juni', 'juli', 'augustus', 'september', 'oktober', 'november', 'december'];
+        const dateRegex = new RegExp(`(\\d{1,2})\\s+(${maanden.join('|')})(?:\\s+(\\d{4}))?`, 'i');
+        const dateMatch = boxText.match(dateRegex);
+        
+        if (dateMatch) {
+            const dag = dateMatch[1].padStart(2, '0');
+            const maandNr = maanden.indexOf(dateMatch[2].toLowerCase()) + 1;
+            // Als er geen jaartal bij staat, pak het huidige jaar
+            let jaar = dateMatch[3] || new Date().getFullYear();
+            $("date").value = `${jaar}-${String(maandNr).padStart(2, '0')}-${dag}`;
+        }
+
+        // 4. Tijd Regex (bvb: 14:00 - 16:30 of 14u00 tot 16u30)
+        const timeMatch = boxText.match(/(\d{1,2})[:u\.](\d{2})\s*(?:-|tot|t\/m|–)\s*(\d{1,2})[:u\.](\d{2})/i);
         if (timeMatch) {
-          $("start").value = `${timeMatch[1].padStart(2, '0')}:${timeMatch[2]}`;
-          $("end").value = `${timeMatch[3].padStart(2, '0')}:${timeMatch[4]}`;
+            $("start").value = `${timeMatch[1].padStart(2, '0')}:${timeMatch[2]}`;
+            $("end").value = `${timeMatch[3].padStart(2, '0')}:${timeMatch[4]}`;
         }
 
-        // 4. Locatie / Details gokje via meta tags
+        // 5. Omschrijving (Optioneel uit meta description)
         const metaDesc = doc.querySelector('meta[name="description"]')?.content;
-        if(metaDesc) $("details").value = metaDesc;
+        if (metaDesc) $("details").value = metaDesc;
 
         showToast("Gegevens succesvol ingeladen!", "success");
         updateApp();
