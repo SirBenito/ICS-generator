@@ -1,0 +1,349 @@
+<!doctype html>
+<html lang="nl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ICS-generator | Wit-Gele Kruis</title>
+  <style>
+    :root {
+      --wgk-blue: #00193c;
+      --wgk-yellow: #ffc300;
+      --bg-color: #eef2f9;
+      --glass-bg: rgba(255, 255, 255, 0.65);
+      --glass-border: rgba(255, 255, 255, 0.8);
+      --glass-shadow: 0 8px 32px rgba(0, 25, 60, 0.08);
+      --text-main: #111827;
+      --text-muted: #4b5563;
+      --radius: 20px;
+      --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      line-height: 1.6;
+      min-height: 100vh;
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    /* Animated Background Blobs */
+    .blob {
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(80px);
+      z-index: -1;
+      opacity: 0.5;
+      animation: float 20s infinite ease-in-out alternate;
+    }
+    .blob-1 { top: -10%; left: -10%; width: 50vw; height: 50vw; background: var(--wgk-yellow); animation-delay: 0s; }
+    .blob-2 { bottom: -10%; right: -10%; width: 40vw; height: 40vw; background: #8aa9d4; animation-delay: -5s; }
+    .blob-3 { top: 40%; left: 60%; width: 30vw; height: 30vw; background: var(--wgk-blue); opacity: 0.15; animation-delay: -10s; }
+
+    @keyframes float {
+      0% { transform: translate(0, 0) scale(1); }
+      100% { transform: translate(5%, 10%) scale(1.1); }
+    }
+
+    .glass {
+      background: var(--glass-bg);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius);
+      box-shadow: var(--glass-shadow);
+    }
+
+    header { padding: 40px 20px 20px; text-align: center; }
+    header h1 { color: var(--wgk-blue); font-size: clamp(32px, 5vw, 48px); letter-spacing: -0.04em; font-weight: 800; margin-bottom: 12px; }
+    header p { color: var(--text-muted); max-width: 600px; margin: 0 auto; font-size: 1.1rem; }
+
+    main {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 30px;
+      align-items: start;
+    }
+
+    @media (min-width: 960px) {
+      main { grid-template-columns: 1.2fr 1fr; gap: 40px; padding: 40px 20px; }
+    }
+
+    .card { padding: 32px; }
+    .card-title { font-size: 1.25rem; font-weight: 700; color: var(--wgk-blue); margin-bottom: 24px; display: flex; align-items: center; gap: 12px; }
+    .step-pill { background: var(--wgk-yellow); color: var(--wgk-blue); padding: 4px 12px; border-radius: 99px; font-size: 0.85rem; font-weight: 800; }
+
+    /* URL Import Box */
+    .import-box {
+      background: rgba(0, 25, 60, 0.04);
+      border: 1px solid rgba(0, 25, 60, 0.1);
+      border-radius: 16px;
+      padding: 20px;
+      margin-bottom: 28px;
+    }
+    .import-box p { font-size: 0.85rem; color: var(--text-muted); margin-top: 8px; }
+
+    .form-group { margin-bottom: 20px; }
+    .row { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 20px; }
+    .row-import { display: flex; gap: 12px; }
+    
+    label { display: block; font-weight: 600; margin-bottom: 8px; color: var(--wgk-blue); font-size: 0.95rem; }
+
+    input, textarea {
+      width: 100%; background: rgba(255, 255, 255, 0.7); border: 1px solid rgba(0, 25, 60, 0.1);
+      border-radius: 12px; padding: 14px 16px; font-family: inherit; font-size: 1rem; color: var(--text-main); transition: var(--transition);
+    }
+    input:hover, textarea:hover { background: rgba(255, 255, 255, 0.9); }
+    input:focus, textarea:focus { outline: none; background: #fff; border-color: var(--wgk-yellow); box-shadow: 0 0 0 4px rgba(255, 195, 0, 0.2); }
+    textarea { min-height: 120px; resize: vertical; }
+
+    .actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 32px; }
+    
+    button {
+      font-family: inherit; font-weight: 700; font-size: 1rem; padding: 14px 24px; border: none;
+      border-radius: 14px; cursor: pointer; transition: var(--transition); display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    }
+    button:active { transform: scale(0.98); }
+    button:disabled { opacity: 0.6; cursor: not-allowed; transform: none !important; }
+
+    .btn-primary { background: var(--wgk-blue); color: white; box-shadow: 0 4px 14px rgba(0, 25, 60, 0.2); flex: 1 1 auto; }
+    .btn-primary:hover:not(:disabled) { background: #00285e; box-shadow: 0 6px 20px rgba(0, 25, 60, 0.3); transform: translateY(-2px); }
+    
+    .btn-action { background: var(--wgk-yellow); color: var(--wgk-blue); flex: 0 0 auto; white-space: nowrap; }
+    .btn-action:hover:not(:disabled) { background: #e6b000; transform: translateY(-2px); }
+
+    .btn-secondary { background: rgba(0, 25, 60, 0.05); color: var(--wgk-blue); }
+    .btn-secondary:hover:not(:disabled) { background: rgba(0, 25, 60, 0.1); }
+
+    /* Preview Section */
+    .calendar-widget { background: #fff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 24px; border: 1px solid rgba(0,0,0,0.05); }
+    .cal-header { background: var(--wgk-blue); color: white; padding: 12px 20px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+    .cal-header .dot { width: 10px; height: 10px; background: var(--wgk-yellow); border-radius: 50%; }
+    .cal-body { padding: 20px; }
+    .cal-title { font-size: 1.2rem; font-weight: 800; color: var(--wgk-blue); margin-bottom: 12px; }
+    .cal-detail { display: flex; gap: 12px; margin-bottom: 8px; color: var(--text-muted); font-size: 0.95rem; }
+
+    .code-block { background: #111827; color: #e5e7eb; padding: 16px; border-radius: 12px; font-family: ui-monospace, monospace; font-size: 0.85rem; max-height: 200px; overflow-y: auto; white-space: pre-wrap; word-break: break-all; }
+
+    /* Toast */
+    #toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(100px); background: white; color: var(--wgk-blue); padding: 12px 24px; border-radius: 99px; font-weight: 700; box-shadow: 0 10px 30px rgba(0,0,0,0.1); transition: var(--transition); opacity: 0; z-index: 1000; display: flex; align-items: center; gap: 10px; pointer-events: none; }
+    #toast.show { transform: translateX(-50%) translateY(0); opacity: 1; pointer-events: auto; }
+    #toast.success::before { content: '✓'; color: #0f7b4f; background: #eaf7f0; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+    #toast.info::before { content: '⏳'; }
+    #toast.error::before { content: '✖'; color: #b91c1c; background: #fef2f2; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+  </style>
+</head>
+<body>
+
+  <div class="blob blob-1"></div><div class="blob blob-2"></div><div class="blob blob-3"></div>
+
+  <header>
+    <h1>ICS-generator</h1>
+    <p>Maak snel en eenvoudig een universeel agenda-bestand voor Outlook, Apple en Google Agenda.</p>
+  </header>
+
+  <main>
+    <section class="card glass">
+      <div class="card-title"><span class="step-pill">1</span> Gegevens invullen</div>
+
+      <div class="import-box">
+        <label for="importUrl">🪄 Slim importeren via URL (optioneel)</label>
+        <div class="row-import">
+          <input id="importUrl" type="url" placeholder="Bijv. https://www.witgelekruis.be/evenement/infonamiddag...">
+          <button class="btn-action" id="fetchUrlBtn">Haal op</button>
+        </div>
+        <p>Probeer titel, datum en startuur automatisch in te vullen op basis van de webpagina. Let op: controleer nadien altijd of de gegevens kloppen.</p>
+      </div>
+
+      <div class="form-group"><label for="title">Evenement Titel</label><input id="title" type="text" placeholder="Bijv. Infonamiddag: Tips bij warm weer"></div>
+
+      <div class="form-group row">
+        <div><label for="date">Datum</label><input id="date" type="date"></div>
+        <div><label for="start">Startuur</label><input id="start" type="time"></div>
+        <div><label for="end">Einduur</label><input id="end" type="time"></div>
+      </div>
+
+      <div class="form-group"><label for="location">Locatie</label><input id="location" type="text" placeholder="Straat, Huisnummer, Postcode Gemeente"></div>
+      <div class="form-group"><label for="details">Omschrijving (optioneel)</label><textarea id="details" placeholder="Wat staat er op de planning?"></textarea></div>
+
+      <div class="actions">
+        <button class="btn-primary" id="downloadBtn" disabled>
+          <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+          Download .ics
+        </button>
+        <button class="btn-secondary" id="clearBtn">Wissen</button>
+      </div>
+    </section>
+
+    <aside class="card glass">
+      <div class="card-title"><span class="step-pill">2</span> Live Controle</div>
+      <div class="calendar-widget">
+        <div class="cal-header"><div class="dot"></div> Voorbeeld weergave</div>
+        <div class="cal-body">
+          <div class="cal-title" id="previewTitle">Titel van het event</div>
+          <div class="cal-detail"><span style="opacity:0.5">🕒</span> <span id="previewMoment">Kies een datum en tijd</span></div>
+          <div class="cal-detail"><span style="opacity:0.5">📍</span> <span id="previewLocation">Voeg een locatie toe</span></div>
+        </div>
+      </div>
+      <label>Broncode (ICS formaat)</label>
+      <div id="icsText" class="code-block">Vul de velden in om de code te genereren...</div>
+      <div class="actions" style="margin-top: 16px;">
+        <button class="btn-secondary" id="copyBtn" disabled style="width: 100%;">
+          <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+          Kopieer Code
+        </button>
+      </div>
+    </aside>
+  </main>
+
+  <div id="toast">Melding hier</div>
+
+  <script>
+    const $ = id => document.getElementById(id);
+    let currentIcs = ""; let currentFilename = "event.ics";
+
+    function safeFilename(text) {
+      return (text || "event").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "").slice(0, 80) || "event";
+    }
+
+    function escapeIcs(text) {
+      return (text || "").replace(/\\/g, "\\\\").replace(/\r?\n/g, "\\n").replace(/,/g, "\\,").replace(/;/g, "\\;");
+    }
+
+    let toastTimeout;
+    function showToast(msg, type = "success") {
+      const toast = $("toast"); toast.textContent = msg; toast.className = `show ${type}`;
+      clearTimeout(toastTimeout); toastTimeout = setTimeout(() => toast.className = "", 3000);
+    }
+
+    function formatDateForPreview(date) {
+      if (!date) return ""; const [year, month, day] = date.split("-"); return `${day}/${month}/${year}`;
+    }
+
+    function getData() {
+      return {
+        title: $("title").value.trim(), date: $("date").value, start: $("start").value,
+        end: $("end").value, location: $("location").value.trim(), details: $("details").value.trim()
+      };
+    }
+
+    function isValid(data) { return data.title && data.date && data.start && data.end && data.location && (data.start < data.end); }
+
+    function makeIcs(data) {
+      const dateCompact = data.date.replaceAll("-", ""); const startCompact = data.start.replace(":", "") + "00"; const endCompact = data.end.replace(":", "") + "00";
+      const dtStamp = new Date().toISOString().replace(/[-:]/g, "").replace(/\.\d{3}Z$/, "Z");
+      const uid = `${Date.now()}-${safeFilename(data.title)}@witgelekruis.be`;
+      return [
+        "BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//Wit-Gele Kruis//ICS Generator//NL", "CALSCALE:GREGORIAN", "METHOD:PUBLISH",
+        "BEGIN:VTIMEZONE", "TZID:Europe/Brussels", "X-LIC-LOCATION:Europe/Brussels",
+        "BEGIN:DAYLIGHT", "TZOFFSETFROM:+0100", "TZOFFSETTO:+0200", "TZNAME:CEST", "DTSTART:19700329T020000", "RRULE:FREQ=YEARLY;BYMONTH=3;BYDAY=-1SU", "END:DAYLIGHT",
+        "BEGIN:STANDARD", "TZOFFSETFROM:+0200", "TZOFFSETTO:+0100", "TZNAME:CET", "DTSTART:19701025T030000", "RRULE:FREQ=YEARLY;BYMONTH=10;BYDAY=-1SU", "END:STANDARD", "END:VTIMEZONE",
+        "BEGIN:VEVENT", "UID:" + uid, "DTSTAMP:" + dtStamp, "DTSTART;TZID=Europe/Brussels:" + dateCompact + "T" + startCompact, "DTEND;TZID=Europe/Brussels:" + dateCompact + "T" + endCompact,
+        "SUMMARY:" + escapeIcs(data.title), "LOCATION:" + escapeIcs(data.location), "DESCRIPTION:" + escapeIcs(data.details),
+        "END:VEVENT", "END:VCALENDAR"
+      ].join("\r\n");
+    }
+
+    function updateApp() {
+      const data = getData(); const valid = isValid(data);
+      $("previewTitle").textContent = data.title || "Titel van het event";
+      $("previewMoment").textContent = data.date && data.start && data.end ? `${formatDateForPreview(data.date)} • ${data.start} - ${data.end}` : "Kies een datum en tijd";
+      $("previewLocation").textContent = data.location || "Voeg een locatie toe";
+
+      if (valid) {
+        currentIcs = makeIcs(data); currentFilename = safeFilename(data.title) + ".ics";
+        $("icsText").textContent = currentIcs; $("downloadBtn").disabled = false; $("copyBtn").disabled = false;
+      } else {
+        currentIcs = ""; $("icsText").textContent = "Vul alle verplichte velden in om de code te genereren..."; $("downloadBtn").disabled = true; $("copyBtn").disabled = true;
+      }
+    }
+
+    // --- Web Scraper / Importer Logic ---
+    $("fetchUrlBtn").addEventListener("click", async () => {
+      const url = $("importUrl").value.trim();
+      if (!url) { showToast("Vul eerst een link in", "error"); return; }
+      
+      showToast("Gegevens ophalen...", "info");
+      $("fetchUrlBtn").disabled = true;
+
+      try {
+        // Gebruikt allorigins proxy om CORS restricties van de browser te omzeilen
+        const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
+        const response = await fetch(proxyUrl);
+        if (!response.ok) throw new Error("Netwerk error");
+        const data = await response.json();
+        
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(data.contents, 'text/html');
+        const bodyText = doc.body.innerText.replace(/\s+/g, ' '); // Strip extra spaces
+
+        // 1. Title: Probeer h1 of meta title, filter WGK branding eruit
+        let fetchedTitle = doc.querySelector('h1')?.innerText || doc.title;
+        if(fetchedTitle) {
+            $("title").value = fetchedTitle.replace(/\| Wit-Gele Kruis/i, '').trim();
+        }
+
+        // 2. Datum Regex: vb. "10 september 2026" of "10/09/2026"
+        const maanden = ['januari', 'februari', 'maart', 'april', 'mei', 'juni', 'juli', 'augustus', 'september', 'oktober', 'november', 'december'];
+        const dateRegex = new RegExp(`(\\d{1,2})\\s+(${maanden.join('|')})\\s+(\\d{4})`, 'i');
+        const dateMatch = bodyText.match(dateRegex);
+        
+        if (dateMatch) {
+          const dag = dateMatch[1].padStart(2, '0');
+          const maandNr = maanden.indexOf(dateMatch[2].toLowerCase()) + 1;
+          $("date").value = `${dateMatch[3]}-${String(maandNr).padStart(2, '0')}-${dag}`;
+        } else {
+          // Fallback: Probeer "1009" (DDMM) op het einde van de URL uit te pakken
+          const urlDateMatch = url.match(/-(\d{2})(\d{2})\/?$/);
+          if(urlDateMatch) {
+            $("date").value = `${new Date().getFullYear()}-${urlDateMatch[2]}-${urlDateMatch[1]}`;
+          }
+        }
+
+        // 3. Tijd Regex: vb. "14:00 - 16:30" of "14u00 tot 16u30"
+        const timeMatch = bodyText.match(/(\d{1,2})[:u](\d{2})\s*(?:-|tot|t\/m|–)\s*(\d{1,2})[:u](\d{2})/i);
+        if (timeMatch) {
+          $("start").value = `${timeMatch[1].padStart(2, '0')}:${timeMatch[2]}`;
+          $("end").value = `${timeMatch[3].padStart(2, '0')}:${timeMatch[4]}`;
+        }
+
+        // 4. Locatie / Details gokje via meta tags
+        const metaDesc = doc.querySelector('meta[name="description"]')?.content;
+        if(metaDesc) $("details").value = metaDesc;
+
+        showToast("Gegevens succesvol ingeladen!", "success");
+        updateApp();
+      } catch (err) {
+        showToast("Kon pagina niet inladen.", "error");
+        console.error(err);
+      } finally {
+        $("fetchUrlBtn").disabled = false;
+      }
+    });
+
+    ["title", "date", "start", "end", "location", "details"].forEach(id => { $(id).addEventListener("input", updateApp); });
+
+    $("downloadBtn").addEventListener("click", () => {
+      if (!currentIcs) return; const blob = new Blob([currentIcs], { type: "text/calendar;charset=utf-8" });
+      const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = currentFilename; document.body.appendChild(a); a.click(); URL.revokeObjectURL(a.href); a.remove(); showToast("Bestand succesvol gedownload!");
+    });
+
+    $("copyBtn").addEventListener("click", () => {
+      if (!currentIcs) return; const textArea = document.createElement("textarea"); textArea.value = currentIcs; document.body.appendChild(textArea); textArea.select();
+      try { document.execCommand('copy'); showToast("Code gekopieerd naar klembord!"); } catch (err) { showToast("Kopiëren mislukt.", "error"); } document.body.removeChild(textArea);
+    });
+
+    $("clearBtn").addEventListener("click", () => {
+      ["title", "date", "start", "end", "location", "details", "importUrl"].forEach(id => $(id).value = ""); updateApp();
+    });
+
+    updateApp();
+  </script>
+</body>
+</html>
