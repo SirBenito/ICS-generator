@@ -1,47 +1,84 @@
 <!doctype html>
-<html lang="nl">
+<html lang="nl" data-theme="light">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>ICS-generator | Wit-Gele Kruis</title>
   <style>
     :root {
+      /* Light Mode Variables */
       --wgk-blue: #00193c;
       --wgk-yellow: #ffc300;
-      --bg-color: #eef2f9;
+      --bg-grad-1: #eef2f9;
+      --bg-grad-2: #e0e7f1;
+      --bg-grad-3: #c5d3e8;
+      --bg-grad-4: #f6f8fb;
       --glass-bg: rgba(255, 255, 255, 0.65);
       --glass-border: rgba(255, 255, 255, 0.8);
       --glass-shadow: 0 8px 32px rgba(0, 25, 60, 0.08);
       --text-main: #111827;
       --text-muted: #4b5563;
+      --input-bg: rgba(255, 255, 255, 0.7);
+      --input-border: rgba(0, 25, 60, 0.1);
+      --card-bg: #fff;
+      --widget-bg: #fff;
+      --code-bg: #111827;
+      --code-text: #e5e7eb;
       --radius: 20px;
       --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    [data-theme="dark"] {
+      /* Dark Mode Variables */
+      --wgk-blue: #60a5fa; /* Lighter blue for dark mode text */
+      --wgk-yellow: #eab308;
+      --bg-grad-1: #0a1128;
+      --bg-grad-2: #101c38;
+      --bg-grad-3: #00193c;
+      --bg-grad-4: #050b14;
+      --glass-bg: rgba(16, 28, 56, 0.65);
+      --glass-border: rgba(255, 255, 255, 0.1);
+      --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+      --text-main: #f3f4f6;
+      --text-muted: #9ca3af;
+      --input-bg: rgba(0, 0, 0, 0.3);
+      --input-border: rgba(255, 255, 255, 0.1);
+      --card-bg: #1f2937;
+      --widget-bg: #1f2937;
+      --code-bg: #000000;
+      --code-text: #60a5fa;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
       font-family: system-ui, -apple-system, sans-serif;
-      background-color: var(--bg-color);
       color: var(--text-main);
       line-height: 1.6;
       min-height: 100vh;
       overflow-x: hidden;
       position: relative;
+      /* Animated Gradient Background */
+      background: linear-gradient(-45deg, var(--bg-grad-1), var(--bg-grad-2), var(--bg-grad-3), var(--bg-grad-4));
+      background-size: 400% 400%;
+      animation: gradientBG 15s ease infinite;
+      transition: background 0.5s ease, color 0.5s ease;
+    }
+
+    @keyframes gradientBG {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
     }
 
     /* Animated Background Blobs */
     .blob {
-      position: fixed;
-      border-radius: 50%;
-      filter: blur(80px);
-      z-index: -1;
-      opacity: 0.5;
-      animation: float 20s infinite ease-in-out alternate;
+      position: fixed; border-radius: 50%; filter: blur(80px); z-index: -1; opacity: 0.4;
+      animation: float 20s infinite ease-in-out alternate; pointer-events: none;
     }
     .blob-1 { top: -10%; left: -10%; width: 50vw; height: 50vw; background: var(--wgk-yellow); animation-delay: 0s; }
     .blob-2 { bottom: -10%; right: -10%; width: 40vw; height: 40vw; background: #8aa9d4; animation-delay: -5s; }
-    .blob-3 { top: 40%; left: 60%; width: 30vw; height: 30vw; background: var(--wgk-blue); opacity: 0.15; animation-delay: -10s; }
+    .blob-3 { top: 40%; left: 60%; width: 30vw; height: 30vw; background: #00193c; opacity: 0.15; animation-delay: -10s; }
 
     @keyframes float {
       0% { transform: translate(0, 0) scale(1); }
@@ -49,45 +86,37 @@
     }
 
     .glass {
-      background: var(--glass-bg);
-      backdrop-filter: blur(24px);
-      -webkit-backdrop-filter: blur(24px);
-      border: 1px solid var(--glass-border);
-      border-radius: var(--radius);
-      box-shadow: var(--glass-shadow);
+      background: var(--glass-bg); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+      border: 1px solid var(--glass-border); border-radius: var(--radius); box-shadow: var(--glass-shadow);
+      transition: var(--transition);
     }
 
-    header { padding: 40px 20px 20px; text-align: center; }
-    header h1 { color: var(--wgk-blue); font-size: clamp(32px, 5vw, 48px); letter-spacing: -0.04em; font-weight: 800; margin-bottom: 12px; }
+    header { padding: 40px 20px 20px; text-align: center; position: relative; }
+    header h1 { color: var(--wgk-blue); font-size: clamp(32px, 5vw, 48px); letter-spacing: -0.04em; font-weight: 800; margin-bottom: 12px; transition: color 0.3s ease; }
     header p { color: var(--text-muted); max-width: 600px; margin: 0 auto; font-size: 1.1rem; }
 
+    /* Theme Toggle */
+    .theme-toggle {
+      position: absolute; top: 20px; right: 20px; background: var(--glass-bg);
+      border: 1px solid var(--glass-border); border-radius: 50%; width: 44px; height: 44px;
+      display: flex; align-items: center; justify-content: center; cursor: pointer;
+      color: var(--text-main); font-size: 1.2rem; box-shadow: var(--glass-shadow); transition: var(--transition);
+    }
+    .theme-toggle:hover { transform: scale(1.1); }
+
     main {
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 20px;
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 30px;
-      align-items: start;
+      max-width: 1200px; margin: 0 auto; padding: 20px; display: grid;
+      grid-template-columns: 1fr; gap: 30px; align-items: start;
     }
+    @media (min-width: 960px) { main { grid-template-columns: 1.2fr 1fr; gap: 40px; padding: 40px 20px; } }
 
-    @media (min-width: 960px) {
-      main { grid-template-columns: 1.2fr 1fr; gap: 40px; padding: 40px 20px; }
-    }
-
-    .card { padding: 32px; transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.4s ease; }
-    .card:hover { transform: translateY(-4px); box-shadow: 0 16px 40px rgba(0, 25, 60, 0.12); }
+    .card { padding: 32px; transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.4s ease, background 0.3s ease, border-color 0.3s ease; }
+    .card:hover { transform: translateY(-4px); box-shadow: var(--glass-shadow); }
     .card-title { font-size: 1.25rem; font-weight: 700; color: var(--wgk-blue); margin-bottom: 24px; display: flex; align-items: center; gap: 12px; }
-    .step-pill { background: var(--wgk-yellow); color: var(--wgk-blue); padding: 4px 12px; border-radius: 99px; font-size: 0.85rem; font-weight: 800; }
+    .step-pill { background: var(--wgk-yellow); color: #00193c; padding: 4px 12px; border-radius: 99px; font-size: 0.85rem; font-weight: 800; }
 
-    /* URL Import Box */
-    .import-box {
-      background: rgba(0, 25, 60, 0.04);
-      border: 1px solid rgba(0, 25, 60, 0.1);
-      border-radius: 16px;
-      padding: 20px;
-      margin-bottom: 28px;
-    }
+    .import-box { background: rgba(0, 0, 0, 0.04); border: 1px solid var(--input-border); border-radius: 16px; padding: 20px; margin-bottom: 28px; }
+    [data-theme="dark"] .import-box { background: rgba(255, 255, 255, 0.05); }
     .import-box p { font-size: 0.85rem; color: var(--text-muted); margin-top: 8px; }
 
     .form-group { margin-bottom: 20px; }
@@ -97,11 +126,14 @@
     label { display: block; font-weight: 600; margin-bottom: 8px; color: var(--wgk-blue); font-size: 0.95rem; }
 
     input, textarea {
-      width: 100%; background: rgba(255, 255, 255, 0.7); border: 1px solid rgba(0, 25, 60, 0.1);
+      width: 100%; background: var(--input-bg); border: 1px solid var(--input-border);
       border-radius: 12px; padding: 14px 16px; font-family: inherit; font-size: 1rem; color: var(--text-main); transition: var(--transition);
     }
-    input:hover, textarea:hover { background: rgba(255, 255, 255, 0.9); transform: translateY(-1px); }
-    input:focus, textarea:focus { outline: none; background: #fff; border-color: var(--wgk-yellow); box-shadow: 0 8px 20px rgba(255, 195, 0, 0.15); transform: translateY(-2px); }
+    input::-webkit-calendar-picker-indicator { filter: invert(var(--icon-invert, 0)); cursor: pointer; }
+    [data-theme="dark"] { --icon-invert: 1; }
+    
+    input:hover, textarea:hover { transform: translateY(-1px); border-color: var(--wgk-yellow); }
+    input:focus, textarea:focus { outline: none; background: var(--card-bg); border-color: var(--wgk-yellow); box-shadow: 0 8px 20px rgba(255, 195, 0, 0.15); transform: translateY(-2px); }
     textarea { min-height: 120px; resize: vertical; }
 
     .actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 32px; }
@@ -113,42 +145,34 @@
     button:active { transform: scale(0.98); }
     button:disabled { opacity: 0.6; cursor: not-allowed; transform: none !important; }
 
-    .btn-primary { background: var(--wgk-blue); color: white; box-shadow: 0 4px 14px rgba(0, 25, 60, 0.2); flex: 1 1 auto; }
-    .btn-primary:hover:not(:disabled) { background: #00285e; box-shadow: 0 6px 20px rgba(0, 25, 60, 0.3); transform: translateY(-2px); }
+    .btn-primary { background: #00193c; color: white; box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2); flex: 1 1 auto; }
+    [data-theme="dark"] .btn-primary { background: var(--wgk-blue); color: #000; }
+    .btn-primary:hover:not(:disabled) { filter: brightness(1.2); transform: translateY(-2px); }
     
-    .btn-action { background: var(--wgk-yellow); color: var(--wgk-blue); flex: 0 0 auto; white-space: nowrap; }
-    .btn-action:hover:not(:disabled) { background: #e6b000; transform: translateY(-2px); }
+    .btn-action { background: var(--wgk-yellow); color: #00193c; flex: 0 0 auto; white-space: nowrap; }
+    .btn-action:hover:not(:disabled) { filter: brightness(1.1); transform: translateY(-2px); }
 
-    .btn-secondary { background: rgba(0, 25, 60, 0.05); color: var(--wgk-blue); }
-    .btn-secondary:hover:not(:disabled) { background: rgba(0, 25, 60, 0.1); }
+    .btn-secondary { background: rgba(128, 128, 128, 0.1); color: var(--text-main); }
+    .btn-secondary:hover:not(:disabled) { background: rgba(128, 128, 128, 0.2); }
 
-    /* Preview Section */
-    .calendar-widget { background: #fff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 24px; border: 1px solid rgba(0,0,0,0.05); }
-    .cal-header { background: var(--wgk-blue); color: white; padding: 12px 20px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+    .calendar-widget { background: var(--widget-bg); border-radius: 16px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 24px; border: 1px solid var(--input-border); transition: var(--transition); }
+    .cal-header { background: #00193c; color: white; padding: 12px 20px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+    [data-theme="dark"] .cal-header { background: #0f172a; }
     .cal-header .dot { width: 10px; height: 10px; background: var(--wgk-yellow); border-radius: 50%; }
     .cal-body { padding: 20px; }
     .cal-title { font-size: 1.2rem; font-weight: 800; color: var(--wgk-blue); margin-bottom: 12px; }
     .cal-detail { display: flex; gap: 12px; margin-bottom: 8px; color: var(--text-muted); font-size: 0.95rem; }
 
-    .code-block { background: #111827; color: #e5e7eb; padding: 16px; border-radius: 12px; font-family: ui-monospace, monospace; font-size: 0.85rem; max-height: 200px; overflow-y: auto; white-space: pre-wrap; word-break: break-all; }
+    .code-block { background: var(--code-bg); color: var(--code-text); padding: 16px; border-radius: 12px; font-family: ui-monospace, monospace; font-size: 0.85rem; max-height: 200px; overflow-y: auto; white-space: pre-wrap; word-break: break-all; border: 1px solid var(--input-border); }
 
-    /* Animations */
-    @keyframes slideUp {
-      from { opacity: 0; transform: translateY(40px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-    @keyframes pulseUpdate {
-      0% { transform: scale(1); background-color: #fff; }
-      50% { transform: scale(1.02); background-color: #fefce8; }
-      100% { transform: scale(1); background-color: #fff; }
-    }
+    @keyframes slideUp { from { opacity: 0; transform: translateY(40px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes pulseUpdate { 0% { transform: scale(1); filter: brightness(1); } 50% { transform: scale(1.02); filter: brightness(0.95); } 100% { transform: scale(1); filter: brightness(1); } }
     .animate-in { animation: slideUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) both; }
     .delay-1 { animation-delay: 0.1s; }
     .delay-2 { animation-delay: 0.2s; }
     .cal-body.update-pulse { animation: pulseUpdate 0.4s ease-out; }
 
-    /* Toast */
-    #toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(100px); background: white; color: var(--wgk-blue); padding: 12px 24px; border-radius: 99px; font-weight: 700; box-shadow: 0 10px 30px rgba(0,0,0,0.1); transition: var(--transition); opacity: 0; z-index: 1000; display: flex; align-items: center; gap: 10px; pointer-events: none; }
+    #toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(100px); background: var(--widget-bg); color: var(--text-main); padding: 12px 24px; border-radius: 99px; font-weight: 700; box-shadow: 0 10px 30px rgba(0,0,0,0.2); transition: var(--transition); opacity: 0; z-index: 1000; display: flex; align-items: center; gap: 10px; pointer-events: none; border: 1px solid var(--input-border); }
     #toast.show { transform: translateX(-50%) translateY(0); opacity: 1; pointer-events: auto; }
     #toast.success::before { content: '✓'; color: #0f7b4f; background: #eaf7f0; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
     #toast.info::before { content: '⏳'; }
@@ -160,6 +184,7 @@
   <div class="blob blob-1"></div><div class="blob blob-2"></div><div class="blob blob-3"></div>
 
   <header>
+    <button class="theme-toggle" id="themeToggle" title="Dark/Light Mode">🌙</button>
     <h1>ICS-generator</h1>
     <p>Maak snel en eenvoudig een universeel agenda-bestand voor Outlook, Apple en Google Agenda.</p>
   </header>
@@ -171,7 +196,7 @@
       <div class="import-box">
         <label for="importUrl">🪄 Slim importeren via URL (optioneel)</label>
         <div class="row-import">
-          <input id="importUrl" type="url" placeholder="Bijv. https://www.witgelekruis.be/evenement/infonamiddag...">
+          <input id="importUrl" type="url" placeholder="Bijv. https://www.witgelekruis.be/evenement/...">
           <button class="btn-action" id="fetchUrlBtn">Haal op</button>
         </div>
         <p>Probeer titel, datum en startuur automatisch in te vullen op basis van de webpagina. Let op: controleer nadien altijd of de gegevens kloppen.</p>
@@ -224,13 +249,19 @@
     const $ = id => document.getElementById(id);
     let currentIcs = ""; let currentFilename = "event.ics";
 
-    function safeFilename(text) {
-      return (text || "event").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "").slice(0, 80) || "event";
-    }
+    // --- Dark Mode Logic ---
+    const themeBtn = $("themeToggle");
+    const toggleTheme = () => {
+      const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+      document.documentElement.setAttribute('data-theme', isDark ? 'light' : 'dark');
+      themeBtn.textContent = isDark ? '🌙' : '☀️';
+    };
+    themeBtn.addEventListener('click', toggleTheme);
+    // Check system preference
+    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) { toggleTheme(); }
 
-    function escapeIcs(text) {
-      return (text || "").replace(/\\/g, "\\\\").replace(/\r?\n/g, "\\n").replace(/,/g, "\\,").replace(/;/g, "\\;");
-    }
+    function safeFilename(text) { return (text || "event").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "").slice(0, 80) || "event"; }
+    function escapeIcs(text) { return (text || "").replace(/\\/g, "\\\\").replace(/\r?\n/g, "\\n").replace(/,/g, "\\,").replace(/;/g, "\\;"); }
 
     let toastTimeout;
     function showToast(msg, type = "success") {
@@ -269,11 +300,8 @@
     function updateApp() {
       const data = getData(); const valid = isValid(data);
       
-      // Pulse animation trigger
       const calBody = document.querySelector('.cal-body');
-      calBody.classList.remove('update-pulse');
-      void calBody.offsetWidth; // force reflow
-      calBody.classList.add('update-pulse');
+      calBody.classList.remove('update-pulse'); void calBody.offsetWidth; calBody.classList.add('update-pulse');
 
       $("previewTitle").textContent = data.title || "Titel van het event";
       $("previewMoment").textContent = data.date && data.start && data.end ? `${formatDateForPreview(data.date)} • ${data.start} - ${data.end}` : "Kies een datum en tijd";
@@ -287,54 +315,86 @@
       }
     }
 
-    // --- Web Scraper / Importer Logic ---
+    // --- Web Scraper 2.0 Logic ---
+    async function fetchHtmlFallback(url) {
+        // Poging 1: CodeTabs (Vaak meest betrouwbaar voor plain HTML via browser fetch)
+        try {
+            const res = await fetch(`https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`);
+            if (res.ok) return await res.text();
+        } catch (e) { console.log("Codetabs failed, trying fallback..."); }
+        
+        // Poging 2: AllOrigins JSON route
+        const res = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(url)}`);
+        const data = await res.json();
+        if(data.contents) return data.contents;
+        throw new Error("Geen content gevonden.");
+    }
+
     $("fetchUrlBtn").addEventListener("click", async () => {
       const url = $("importUrl").value.trim();
       if (!url) { showToast("Vul eerst een link in", "error"); return; }
       
-      showToast("Gegevens ophalen via Corsproxy...", "info");
+      showToast("Gegevens ophalen...", "info");
       $("fetchUrlBtn").disabled = true;
 
       try {
-        // Gebruikt corsproxy.io, vaak stabieler dan allorigins
-        const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(url)}`;
-        const response = await fetch(proxyUrl);
-        if (!response.ok) throw new Error(`Netwerk error: ${response.status}`);
-        const htmlText = await response.text();
-        
+        const htmlText = await fetchHtmlFallback(url);
         const parser = new DOMParser();
         const doc = parser.parseFromString(htmlText, 'text/html');
         
-        // Gebruik textContent i.p.v. innerText, werkt beter op onzichtbare DOM elementen
-        const bodyText = doc.body ? doc.body.textContent.replace(/\s+/g, ' ') : '';
+        let foundDate = false;
 
-        // 1. Title: Probeer h1 of meta title, filter WGK branding eruit
+        // --- Strategie 1: Zoek naar verborgen JSON-LD data (Vaak aanwezig bij events!) ---
+        const scripts = doc.querySelectorAll('script[type="application/ld+json"]');
+        scripts.forEach(script => {
+            try {
+                const schema = JSON.parse(script.innerText || script.textContent);
+                // Als het een array is of genest is, probeer een startDate te vinden via stringify truc
+                const schemaStr = JSON.stringify(schema);
+                if (schemaStr.includes('Event') || schemaStr.includes('startDate')) {
+                    const startMatch = schemaStr.match(/"startDate"\s*:\s*"(\d{4}-\d{2}-\d{2})/i);
+                    if(startMatch) {
+                        $("date").value = startMatch[1];
+                        foundDate = true;
+                    }
+                }
+            } catch(e) {}
+        });
+
+        // Gebruik textContent en vervang witregels/enters door spaties
+        const bodyText = doc.body ? doc.body.textContent.replace(/[\n\r\t]+/g, ' ').replace(/\s+/g, ' ') : '';
+
+        // 1. Title
         let fetchedTitle = doc.querySelector('h1')?.textContent || doc.title || '';
-        if(fetchedTitle) {
-            $("title").value = fetchedTitle.replace(/\| Wit-Gele Kruis/i, '').trim();
-        }
+        if(fetchedTitle) $("title").value = fetchedTitle.replace(/\| Wit-Gele Kruis/i, '').trim();
 
-        // 2. Datum Regex: robuuster voor voluit geschreven datums
-        const maanden = ['januari', 'februari', 'maart', 'april', 'mei', 'juni', 'juli', 'augustus', 'september', 'oktober', 'november', 'december'];
-        const dateRegex = new RegExp(`(?:maandag|dinsdag|woensdag|donderdag|vrijdag|zaterdag|zondag)?,?\\s*(\\d{1,2})\\s+(${maanden.join('|')})(?:\\s+(\\d{4}))?`, 'i');
-        const dateMatch = bodyText.match(dateRegex);
-        
-        if (dateMatch) {
-          const dag = dateMatch[1].padStart(2, '0');
-          const maandNr = maanden.indexOf(dateMatch[2].toLowerCase()) + 1;
-          let jaar = dateMatch[3];
-          
-          if (!jaar) {
-            const nu = new Date();
-            jaar = (maandNr < (nu.getMonth() + 1)) ? nu.getFullYear() + 1 : nu.getFullYear();
-          }
-          $("date").value = `${jaar}-${String(maandNr).padStart(2, '0')}-${dag}`;
-        } else {
-          // Fallback via URL
-          const urlDateMatch = url.match(/-(\d{2})(\d{2})\/?$/);
-          if(urlDateMatch) {
-            $("date").value = `${new Date().getFullYear()}-${urlDateMatch[2]}-${urlDateMatch[1]}`;
-          }
+        // --- Strategie 2: Zware Regex (als JSON-LD faalt) ---
+        if(!foundDate) {
+            const maanden = ['januari', 'februari', 'maart', 'april', 'mei', 'juni', 'juli', 'augustus', 'september', 'oktober', 'november', 'december'];
+            // Regex zoekt nu met erg veel tolerantie voor extra spaties/leestekens.
+            const dateRegex = new RegExp(`(?:maandag|dinsdag|woensdag|donderdag|vrijdag|zaterdag|zondag)?\\s*,?\\s*(\\d{1,2})\\s*(${maanden.join('|')})\\s*(?:\\s+(\\d{4}))?`, 'i');
+            const dateMatch = bodyText.match(dateRegex);
+            
+            // Controleer ook numerieke datums (DD/MM/YYYY of DD-MM-YYYY)
+            const numDateRegex = /(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/;
+            const numDateMatch = bodyText.match(numDateRegex);
+
+            if (dateMatch) {
+                const dag = dateMatch[1].padStart(2, '0');
+                const maandNr = maanden.indexOf(dateMatch[2].toLowerCase()) + 1;
+                let jaar = dateMatch[3];
+                if (!jaar) {
+                    const nu = new Date();
+                    jaar = (maandNr < (nu.getMonth() + 1)) ? nu.getFullYear() + 1 : nu.getFullYear();
+                }
+                $("date").value = `${jaar}-${String(maandNr).padStart(2, '0')}-${dag}`;
+            } else if (numDateMatch) {
+                 $("date").value = `${numDateMatch[3]}-${numDateMatch[2].padStart(2, '0')}-${numDateMatch[1].padStart(2, '0')}`;
+            } else {
+                // Fallback via URL
+                const urlDateMatch = url.match(/-(\d{2})(\d{2})\/?$/);
+                if(urlDateMatch) $("date").value = `${new Date().getFullYear()}-${urlDateMatch[2]}-${urlDateMatch[1]}`;
+            }
         }
 
         // 3. Tijd Regex
