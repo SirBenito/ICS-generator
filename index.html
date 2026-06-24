@@ -75,7 +75,8 @@
       main { grid-template-columns: 1.2fr 1fr; gap: 40px; padding: 40px 20px; }
     }
 
-    .card { padding: 32px; }
+    .card { padding: 32px; transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.4s ease; }
+    .card:hover { transform: translateY(-4px); box-shadow: 0 16px 40px rgba(0, 25, 60, 0.12); }
     .card-title { font-size: 1.25rem; font-weight: 700; color: var(--wgk-blue); margin-bottom: 24px; display: flex; align-items: center; gap: 12px; }
     .step-pill { background: var(--wgk-yellow); color: var(--wgk-blue); padding: 4px 12px; border-radius: 99px; font-size: 0.85rem; font-weight: 800; }
 
@@ -99,8 +100,8 @@
       width: 100%; background: rgba(255, 255, 255, 0.7); border: 1px solid rgba(0, 25, 60, 0.1);
       border-radius: 12px; padding: 14px 16px; font-family: inherit; font-size: 1rem; color: var(--text-main); transition: var(--transition);
     }
-    input:hover, textarea:hover { background: rgba(255, 255, 255, 0.9); }
-    input:focus, textarea:focus { outline: none; background: #fff; border-color: var(--wgk-yellow); box-shadow: 0 0 0 4px rgba(255, 195, 0, 0.2); }
+    input:hover, textarea:hover { background: rgba(255, 255, 255, 0.9); transform: translateY(-1px); }
+    input:focus, textarea:focus { outline: none; background: #fff; border-color: var(--wgk-yellow); box-shadow: 0 8px 20px rgba(255, 195, 0, 0.15); transform: translateY(-2px); }
     textarea { min-height: 120px; resize: vertical; }
 
     .actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 32px; }
@@ -131,6 +132,21 @@
 
     .code-block { background: #111827; color: #e5e7eb; padding: 16px; border-radius: 12px; font-family: ui-monospace, monospace; font-size: 0.85rem; max-height: 200px; overflow-y: auto; white-space: pre-wrap; word-break: break-all; }
 
+    /* Animations */
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(40px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes pulseUpdate {
+      0% { transform: scale(1); background-color: #fff; }
+      50% { transform: scale(1.02); background-color: #fefce8; }
+      100% { transform: scale(1); background-color: #fff; }
+    }
+    .animate-in { animation: slideUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) both; }
+    .delay-1 { animation-delay: 0.1s; }
+    .delay-2 { animation-delay: 0.2s; }
+    .cal-body.update-pulse { animation: pulseUpdate 0.4s ease-out; }
+
     /* Toast */
     #toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(100px); background: white; color: var(--wgk-blue); padding: 12px 24px; border-radius: 99px; font-weight: 700; box-shadow: 0 10px 30px rgba(0,0,0,0.1); transition: var(--transition); opacity: 0; z-index: 1000; display: flex; align-items: center; gap: 10px; pointer-events: none; }
     #toast.show { transform: translateX(-50%) translateY(0); opacity: 1; pointer-events: auto; }
@@ -149,7 +165,7 @@
   </header>
 
   <main>
-    <section class="card glass">
+    <section class="card glass animate-in delay-1">
       <div class="card-title"><span class="step-pill">1</span> Gegevens invullen</div>
 
       <div class="import-box">
@@ -181,7 +197,7 @@
       </div>
     </section>
 
-    <aside class="card glass">
+    <aside class="card glass animate-in delay-2">
       <div class="card-title"><span class="step-pill">2</span> Live Controle</div>
       <div class="calendar-widget">
         <div class="cal-header"><div class="dot"></div> Voorbeeld weergave</div>
@@ -252,6 +268,13 @@
 
     function updateApp() {
       const data = getData(); const valid = isValid(data);
+      
+      // Pulse animation trigger
+      const calBody = document.querySelector('.cal-body');
+      calBody.classList.remove('update-pulse');
+      void calBody.offsetWidth; // force reflow
+      calBody.classList.add('update-pulse');
+
       $("previewTitle").textContent = data.title || "Titel van het event";
       $("previewMoment").textContent = data.date && data.start && data.end ? `${formatDateForPreview(data.date)} • ${data.start} - ${data.end}` : "Kies een datum en tijd";
       $("previewLocation").textContent = data.location || "Voeg een locatie toe";
@@ -289,15 +312,23 @@
             $("title").value = fetchedTitle.replace(/\| Wit-Gele Kruis/i, '').trim();
         }
 
-        // 2. Datum Regex: vb. "10 september 2026" of "10/09/2026"
+        // 2. Datum Regex: robuuster voor voluit geschreven datums (vb. "Dinsdag 10 september 2026" of gewoon "10 september")
         const maanden = ['januari', 'februari', 'maart', 'april', 'mei', 'juni', 'juli', 'augustus', 'september', 'oktober', 'november', 'december'];
-        const dateRegex = new RegExp(`(\\d{1,2})\\s+(${maanden.join('|')})\\s+(\\d{4})`, 'i');
+        // Houdt rekening met optionele dag van de week en een optioneel jaartal op het einde
+        const dateRegex = new RegExp(`(?:maandag|dinsdag|woensdag|donderdag|vrijdag|zaterdag|zondag)?,?\\s*(\\d{1,2})\\s+(${maanden.join('|')})(?:\\s+(\\d{4}))?`, 'i');
         const dateMatch = bodyText.match(dateRegex);
         
         if (dateMatch) {
           const dag = dateMatch[1].padStart(2, '0');
           const maandNr = maanden.indexOf(dateMatch[2].toLowerCase()) + 1;
-          $("date").value = `${dateMatch[3]}-${String(maandNr).padStart(2, '0')}-${dag}`;
+          let jaar = dateMatch[3];
+          
+          // Als het jaartal ontbreekt in de tekst, gokken we op het huidige of volgende jaar
+          if (!jaar) {
+            const nu = new Date();
+            jaar = (maandNr < (nu.getMonth() + 1)) ? nu.getFullYear() + 1 : nu.getFullYear();
+          }
+          $("date").value = `${jaar}-${String(maandNr).padStart(2, '0')}-${dag}`;
         } else {
           // Fallback: Probeer "1009" (DDMM) op het einde van de URL uit te pakken
           const urlDateMatch = url.match(/-(\d{2})(\d{2})\/?$/);
@@ -306,8 +337,8 @@
           }
         }
 
-        // 3. Tijd Regex: vb. "14:00 - 16:30" of "14u00 tot 16u30"
-        const timeMatch = bodyText.match(/(\d{1,2})[:u](\d{2})\s*(?:-|tot|t\/m|–)\s*(\d{1,2})[:u](\d{2})/i);
+        // 3. Tijd Regex: vb. "14:00 - 16:30", "14.00 u. - 16.30", of "14u00 tot 16u30"
+        const timeMatch = bodyText.match(/(\d{1,2})[:u\.](\d{2})\s*(?:u\.?)?\s*(?:-|tot|t\/m|–)\s*(\d{1,2})[:u\.](\d{2})/i);
         if (timeMatch) {
           $("start").value = `${timeMatch[1].padStart(2, '0')}:${timeMatch[2]}`;
           $("end").value = `${timeMatch[3].padStart(2, '0')}:${timeMatch[4]}`;
