@@ -273,7 +273,7 @@
         $("fetchUrlBtn").disabled = true;
 
         try {
-            // VERVANG ONDERSTAANDE URL DOOR JOUW MAKE.COM WEBHOOK URL
+            // VERVANG ONDERSTAANDE URL DOOR JOUW MAKE.COM WEBHOOK URL (Zelfde als Stap 1)
             const makeWebhookUrl = "https://hook.eu1.make.com/b4ye1k8kyqkaodut9lg0db5wc3g7jyo7";
             
             const response = await fetch(makeWebhookUrl, {
@@ -285,13 +285,45 @@
             if (response.ok) {
                 const data = await response.json();
                 
-                // Vul de velden in met de data uit Make.com
-                if(data.title) $("title").value = data.title;
-                if(data.date) $("date").value = data.date; // Moet in YYYY-MM-DD formaat zijn
-                if(data.start) $("start").value = data.start; // Moet in HH:MM formaat zijn
-                if(data.end) $("end").value = data.end; // Moet in HH:MM formaat zijn
-                if(data.location) $("location").value = data.location;
-                if(data.details) $("details").value = data.details;
+                // 1. Titel
+                if(data.title) $("title").value = data.title.trim();
+                
+                // 2. Datum (omzetten van "07 sep 2026" naar "2026-09-07" in JavaScript!)
+                if(data.date) {
+                    const rawDate = data.date.trim();
+                    const months = {
+                        jan: "01", feb: "02", mar: "03", apr: "04", mei: "05", jun: "06", 
+                        jul: "07", aug: "08", sep: "09", okt: "10", nov: "11", dec: "12",
+                        mrt: "03", sept: "09"
+                    };
+                    const parts = rawDate.toLowerCase().split(/\s+/);
+                    if (parts.length === 3) {
+                        const day = parts[0].padStart(2, '0');
+                        const monthStr = parts[1].substring(0, 3);
+                        const month = months[monthStr] || "01";
+                        const year = parts[2];
+                        $("date").value = `${year}-${month}-${day}`;
+                    } else {
+                        $("date").value = rawDate;
+                    }
+                }
+                
+                // 3. Tijdstip (Splitsen van "14:00 - 16:00" in start- en einduur)
+                if(data.time) {
+                    const times = data.time.split("-");
+                    if (times.length === 2) {
+                        $("start").value = times[0].trim();
+                        $("end").value = times[1].trim();
+                    }
+                }
+                
+                // 4. Locatie (Schoonmaken van het HTML adres)
+                if(data.location) {
+                    let cleanLoc = data.location.replace(/<[^>]*>/g, ' '); // Strip HTML-tags
+                    cleanLoc = cleanLoc.replace(/\s+/g, ' ').trim(); // Vervang harde enters door nette spaties
+                    cleanLoc = cleanLoc.replace(/ ,/g, ',').replace(/,,/g, ','); // Dubbele komma's herstellen
+                    $("location").value = cleanLoc;
+                }
 
                 updateApp();
                 showToast("Gegevens succesvol ingeladen!", "success");
