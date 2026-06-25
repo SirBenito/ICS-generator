@@ -283,20 +283,45 @@
             });
             
             if (response.ok) {
-                const data = await response.json();
+                // Lees de data uit als robuuste TEXT, niet als breekbare JSON
+                const textData = await response.text();
+                
+                let rawTitle = "", rawDate = "", rawTime = "", rawLoc = "";
+
+                // Controleer of Make netjes antwoordt met de ||| methode
+                if (textData.includes("|||")) {
+                    const parts = textData.split("|||");
+                    rawTitle = parts[0] || "";
+                    rawDate = parts[1] || "";
+                    rawTime = parts[2] || "";
+                    rawLoc = parts[3] || "";
+                } else {
+                    // Fallback als er nog een oud JSON antwoord terugkomt
+                    try {
+                        const json = JSON.parse(textData);
+                        rawTitle = json.title || "";
+                        rawDate = json.date || "";
+                        rawTime = json.time || "";
+                        rawLoc = json.location || "";
+                    } catch(e) {
+                        showToast("Fout: Controleer Make.com Webhook", "error");
+                        $("fetchUrlBtn").disabled = false;
+                        return;
+                    }
+                }
                 
                 // 1. Titel
-                if(data.title) $("title").value = data.title.trim();
+                if(rawTitle) $("title").value = rawTitle.trim();
                 
-                // 2. Datum (omzetten van "07 sep 2026" naar "2026-09-07" in JavaScript!)
-                if(data.date) {
-                    const rawDate = data.date.trim();
+                // 2. Datum (omzetten van "07 sep 2026" naar "2026-09-07" in JavaScript)
+                if(rawDate) {
+                    const cleanDate = rawDate.trim();
                     const months = {
                         jan: "01", feb: "02", mar: "03", apr: "04", mei: "05", jun: "06", 
                         jul: "07", aug: "08", sep: "09", okt: "10", nov: "11", dec: "12",
                         mrt: "03", sept: "09"
                     };
-                    const parts = rawDate.toLowerCase().split(/\s+/);
+                    const parts = cleanDate.toLowerCase().split(/\s+/);
                     if (parts.length === 3) {
                         const day = parts[0].padStart(2, '0');
                         const monthStr = parts[1].substring(0, 3);
@@ -304,23 +329,23 @@
                         const year = parts[2];
                         $("date").value = `${year}-${month}-${day}`;
                     } else {
-                        $("date").value = rawDate;
+                        $("date").value = cleanDate;
                     }
                 }
                 
                 // 3. Tijdstip (Splitsen van "14:00 - 16:00" in start- en einduur)
-                if(data.time) {
-                    const times = data.time.split("-");
+                if(rawTime) {
+                    const times = rawTime.split("-");
                     if (times.length === 2) {
                         $("start").value = times[0].trim();
                         $("end").value = times[1].trim();
                     }
                 }
                 
-                // 4. Locatie (Schoonmaken van het HTML adres)
-                if(data.location) {
-                    let cleanLoc = data.location.replace(/<[^>]*>/g, ' '); // Strip HTML-tags
-                    cleanLoc = cleanLoc.replace(/\s+/g, ' ').trim(); // Vervang harde enters door nette spaties
+                // 4. Locatie (Schoonmaken van het HTML adres dat we uit Make.com kregen)
+                if(rawLoc) {
+                    let cleanLoc = rawLoc.replace(/<[^>]*>/g, ' '); // Strip HTML-tags (zoals div en span)
+                    cleanLoc = cleanLoc.replace(/\s+/g, ' ').trim(); // Vervang harde enters door spaties
                     cleanLoc = cleanLoc.replace(/ ,/g, ',').replace(/,,/g, ','); // Dubbele komma's herstellen
                     $("location").value = cleanLoc;
                 }
@@ -328,7 +353,7 @@
                 updateApp();
                 showToast("Gegevens succesvol ingeladen!", "success");
             } else {
-                throw new Error("Verzendfout");
+                throw new Error("Verzendfout (Geen 200 OK code)");
             }
         } catch (err) {
             showToast("Kon data niet ophalen", "error");
