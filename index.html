@@ -353,10 +353,17 @@
                 updateApp();
                 showToast("Gegevens succesvol ingeladen!", "success");
             } else {
-                throw new Error("Verzendfout (Geen 200 OK code)");
+                const errorText = await response.text();
+                throw new Error(`Make.com antwoordt met code ${response.status}`);
             }
         } catch (err) {
-            showToast("Kon data niet ophalen", "error");
+            console.error(err);
+            // Dit toont nu de échte foutmelding op je scherm!
+            if (err.message === "Failed to fetch") {
+                showToast("Fout: Make.com scenario staat uit of blokkeert (CORS)", "error");
+            } else {
+                showToast(err.message, "error");
+            }
         } finally {
             $("fetchUrlBtn").disabled = false;
         }
