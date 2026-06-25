@@ -1,12 +1,11 @@
 <!doctype html>
-<html lang="nl" data-theme="light">
+<html lang="nl">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>ICS-generator | Wit-Gele Kruis</title>
   <style>
     :root {
-      /* Light Mode Variables */
       --wgk-blue: #00193c;
       --wgk-yellow: #ffc300;
       --bg-grad-1: #eef2f9;
@@ -28,27 +27,6 @@
       --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
-    [data-theme="dark"] {
-      /* Dark Mode Variables */
-      --wgk-blue: #60a5fa; /* Lighter blue for dark mode text */
-      --wgk-yellow: #eab308;
-      --bg-grad-1: #0a1128;
-      --bg-grad-2: #101c38;
-      --bg-grad-3: #00193c;
-      --bg-grad-4: #050b14;
-      --glass-bg: rgba(16, 28, 56, 0.65);
-      --glass-border: rgba(255, 255, 255, 0.1);
-      --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
-      --text-main: #f3f4f6;
-      --text-muted: #9ca3af;
-      --input-bg: rgba(0, 0, 0, 0.3);
-      --input-border: rgba(255, 255, 255, 0.1);
-      --card-bg: #1f2937;
-      --widget-bg: #1f2937;
-      --code-bg: #000000;
-      --code-text: #60a5fa;
-    }
-
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
@@ -58,11 +36,9 @@
       min-height: 100vh;
       overflow-x: hidden;
       position: relative;
-      /* Animated Gradient Background */
       background: linear-gradient(-45deg, var(--bg-grad-1), var(--bg-grad-2), var(--bg-grad-3), var(--bg-grad-4));
       background-size: 400% 400%;
       animation: gradientBG 15s ease infinite;
-      transition: background 0.5s ease, color 0.5s ease;
     }
 
     @keyframes gradientBG {
@@ -71,7 +47,6 @@
       100% { background-position: 0% 50%; }
     }
 
-    /* Animated Background Blobs */
     .blob {
       position: fixed; border-radius: 50%; filter: blur(80px); z-index: -1; opacity: 0.4;
       animation: float 20s infinite ease-in-out alternate; pointer-events: none;
@@ -88,21 +63,11 @@
     .glass {
       background: var(--glass-bg); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
       border: 1px solid var(--glass-border); border-radius: var(--radius); box-shadow: var(--glass-shadow);
-      transition: var(--transition);
     }
 
     header { padding: 40px 20px 20px; text-align: center; position: relative; }
-    header h1 { color: var(--wgk-blue); font-size: clamp(32px, 5vw, 48px); letter-spacing: -0.04em; font-weight: 800; margin-bottom: 12px; transition: color 0.3s ease; }
+    header h1 { color: var(--wgk-blue); font-size: clamp(32px, 5vw, 48px); letter-spacing: -0.04em; font-weight: 800; margin-bottom: 12px; }
     header p { color: var(--text-muted); max-width: 600px; margin: 0 auto; font-size: 1.1rem; }
-
-    /* Theme Toggle */
-    .theme-toggle {
-      position: absolute; top: 20px; right: 20px; background: var(--glass-bg);
-      border: 1px solid var(--glass-border); border-radius: 50%; width: 44px; height: 44px;
-      display: flex; align-items: center; justify-content: center; cursor: pointer;
-      color: var(--text-main); font-size: 1.2rem; box-shadow: var(--glass-shadow); transition: var(--transition);
-    }
-    .theme-toggle:hover { transform: scale(1.1); }
 
     main {
       max-width: 1200px; margin: 0 auto; padding: 20px; display: grid;
@@ -110,13 +75,12 @@
     }
     @media (min-width: 960px) { main { grid-template-columns: 1.2fr 1fr; gap: 40px; padding: 40px 20px; } }
 
-    .card { padding: 32px; transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.4s ease, background 0.3s ease, border-color 0.3s ease; }
+    .card { padding: 32px; transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.4s ease; }
     .card:hover { transform: translateY(-4px); box-shadow: var(--glass-shadow); }
     .card-title { font-size: 1.25rem; font-weight: 700; color: var(--wgk-blue); margin-bottom: 24px; display: flex; align-items: center; gap: 12px; }
     .step-pill { background: var(--wgk-yellow); color: #00193c; padding: 4px 12px; border-radius: 99px; font-size: 0.85rem; font-weight: 800; }
 
     .import-box { background: rgba(0, 0, 0, 0.04); border: 1px solid var(--input-border); border-radius: 16px; padding: 20px; margin-bottom: 28px; }
-    [data-theme="dark"] .import-box { background: rgba(255, 255, 255, 0.05); }
     .import-box p { font-size: 0.85rem; color: var(--text-muted); margin-top: 8px; }
 
     .form-group { margin-bottom: 20px; }
@@ -129,8 +93,7 @@
       width: 100%; background: var(--input-bg); border: 1px solid var(--input-border);
       border-radius: 12px; padding: 14px 16px; font-family: inherit; font-size: 1rem; color: var(--text-main); transition: var(--transition);
     }
-    input::-webkit-calendar-picker-indicator { filter: invert(var(--icon-invert, 0)); cursor: pointer; }
-    [data-theme="dark"] { --icon-invert: 1; }
+    input::-webkit-calendar-picker-indicator { cursor: pointer; }
     
     input:hover, textarea:hover { transform: translateY(-1px); border-color: var(--wgk-yellow); }
     input:focus, textarea:focus { outline: none; background: var(--card-bg); border-color: var(--wgk-yellow); box-shadow: 0 8px 20px rgba(255, 195, 0, 0.15); transform: translateY(-2px); }
@@ -146,7 +109,6 @@
     button:disabled { opacity: 0.6; cursor: not-allowed; transform: none !important; }
 
     .btn-primary { background: #00193c; color: white; box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2); flex: 1 1 auto; }
-    [data-theme="dark"] .btn-primary { background: var(--wgk-blue); color: #000; }
     .btn-primary:hover:not(:disabled) { filter: brightness(1.2); transform: translateY(-2px); }
     
     .btn-action { background: var(--wgk-yellow); color: #00193c; flex: 0 0 auto; white-space: nowrap; }
@@ -155,9 +117,8 @@
     .btn-secondary { background: rgba(128, 128, 128, 0.1); color: var(--text-main); }
     .btn-secondary:hover:not(:disabled) { background: rgba(128, 128, 128, 0.2); }
 
-    .calendar-widget { background: var(--widget-bg); border-radius: 16px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 24px; border: 1px solid var(--input-border); transition: var(--transition); }
+    .calendar-widget { background: var(--widget-bg); border-radius: 16px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 24px; border: 1px solid var(--input-border); }
     .cal-header { background: #00193c; color: white; padding: 12px 20px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
-    [data-theme="dark"] .cal-header { background: #0f172a; }
     .cal-header .dot { width: 10px; height: 10px; background: var(--wgk-yellow); border-radius: 50%; }
     .cal-body { padding: 20px; }
     .cal-title { font-size: 1.2rem; font-weight: 800; color: var(--wgk-blue); margin-bottom: 12px; }
@@ -184,7 +145,6 @@
   <div class="blob blob-1"></div><div class="blob blob-2"></div><div class="blob blob-3"></div>
 
   <header>
-    <button class="theme-toggle" id="themeToggle" title="Dark/Light Mode">🌙</button>
     <h1>ICS-generator</h1>
     <p>Maak snel en eenvoudig een universeel agenda-bestand voor Outlook, Apple en Google Agenda.</p>
   </header>
@@ -249,16 +209,6 @@
     const $ = id => document.getElementById(id);
     let currentIcs = ""; let currentFilename = "event.ics";
 
-    // --- Dark Mode Logic ---
-    const themeBtn = $("themeToggle");
-    const toggleTheme = () => {
-      const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-      document.documentElement.setAttribute('data-theme', isDark ? 'light' : 'dark');
-      themeBtn.textContent = isDark ? '🌙' : '☀️';
-    };
-    themeBtn.addEventListener('click', toggleTheme);
-    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) { toggleTheme(); }
-
     function safeFilename(text) { return (text || "event").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "").slice(0, 80) || "event"; }
     function escapeIcs(text) { return (text || "").replace(/\\/g, "\\\\").replace(/\r?\n/g, "\\n").replace(/,/g, "\\,").replace(/;/g, "\\;"); }
 
@@ -314,32 +264,46 @@
       }
     }
 
-    // --- Web Scraper (Targeted op .side-box) ---
+    // --- Web Scraper via Make.com ---
     $("fetchUrlBtn").addEventListener("click", async () => {
-    const url = $("importUrl").value.trim();
-    if (!url) { showToast("Vul eerst een link in", "error"); return; }
-    
-    showToast("Data verzonden naar Make...", "info");
-    $("fetchUrlBtn").disabled = true;
-
-    try {
-        const response = await fetch("https://hook.eu1.make.com/b4ye1k8kyqkaodut9lg0db5wc3g7jyo7", {
-            method: "POST",
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ url: url })
-        });
+        const url = $("importUrl").value.trim();
+        if (!url) { showToast("Vul eerst een link in", "error"); return; }
         
-        if (response.ok) {
-            showToast("Verzonden! Kijk in Make.com", "success");
-        } else {
-            throw new Error("Verzendfout");
+        showToast("Gegevens ophalen...", "info");
+        $("fetchUrlBtn").disabled = true;
+
+        try {
+            // VERVANG ONDERSTAANDE URL DOOR JOUW MAKE.COM WEBHOOK URL
+            const makeWebhookUrl = "https://hook.eu1.make.com/b4ye1k8kyqkaodut9lg0db5wc3g7jyo7";
+            
+            const response = await fetch(makeWebhookUrl, {
+                method: "POST",
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ url: url })
+            });
+            
+            if (response.ok) {
+                const data = await response.json();
+                
+                // Vul de velden in met de data uit Make.com
+                if(data.title) $("title").value = data.title;
+                if(data.date) $("date").value = data.date; // Moet in YYYY-MM-DD formaat zijn
+                if(data.start) $("start").value = data.start; // Moet in HH:MM formaat zijn
+                if(data.end) $("end").value = data.end; // Moet in HH:MM formaat zijn
+                if(data.location) $("location").value = data.location;
+                if(data.details) $("details").value = data.details;
+
+                updateApp();
+                showToast("Gegevens succesvol ingeladen!", "success");
+            } else {
+                throw new Error("Verzendfout");
+            }
+        } catch (err) {
+            showToast("Kon data niet ophalen", "error");
+        } finally {
+            $("fetchUrlBtn").disabled = false;
         }
-    } catch (err) {
-        showToast("Kon data niet verzenden", "error");
-    } finally {
-        $("fetchUrlBtn").disabled = false;
-    }
-});
+    });
 
     ["title", "date", "start", "end", "location", "details"].forEach(id => { $(id).addEventListener("input", updateApp); });
 
